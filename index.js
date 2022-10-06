@@ -1,178 +1,178 @@
-const rows = 30;                                                //  Sets the amount of rows in the game grid.
-const cols = 50;                                                //  Sets the amount of columns in the game grid.
+const rows = 30;                                                    //  Sets the amount of rows in the game grid.
+const columns = 50;                                                 //  Sets the amount of columns in the game grid.
+let currentTable = [rows];                                          //  Sets an array for the current table with the rows set.
+let nextTable = [rows];                                             //  Sets an array for the next table with the rows set.
 
-let initiate = false;                                           //  Variable that sets the state of the game after activating the Start button. Start = true, Stop = false.
-let timer;                                                      //  Variable to adjust the speed of the game between generations.
-let lifespeed = 1000;                                           //  One second.
+let gameStatus = false;                                             //  Variable that sets the state of the game after activating the Start button.
+let timer;                                                          //  Variable to adjust the speed of the game between generations.
+let lifespeed = 1000;                                               //  Variable to set the time when life comes to another generation.
 
-let currBox = [rows];                                           //  Sets an array for the current box with the rows set.
-let nextBox = [rows];                                           //  Sets an array for the next box with the rows set.
-
-function createBoxArrays() {                                    //  Creates two-dimensional arrays for the current and the next box.
-    for (let i = 0; i < rows; i++) {                            //  For each row it creates an array of columns.
-        currBox[i] = new Array(cols);                           //  Creates two-dimensional array for the current box.
-        nextBox[i] = new Array(cols);                           //  Creates two-dimensional array for the next box.
+function createTableArrays() {                                      //  Creates two-dimensional arrays for the current and the next table.
+    for (let i = 0; i < rows; i++) {                                //  For each row it creates an array of columns.
+        currentTable[i] = new Array(columns);                       //  Creates two-dimensional array for the current box.
+        nextTable[i] = new Array(columns);                          //  Creates two-dimensional array for the next box.
     }
 }
 
-function initBoxArrays() {                                      //  Initializes the current and next boxes as unpopulated or 0.
-    for (let i = 0; i < rows; i++) {                            //  For each row:
-        for (let j = 0; j < cols; j++) {                        //  For each column:
-            currBox[i][j] = 0;                                  //  Set 0 to current box space.
-            nextBox[i][j] = 0;                                  //  Set 0 to next box space.
+function initTableArrays() {                                        //  Initializes the current and next table as unpopulated or 0.
+    for (let i = 0; i < rows; i++) {                                //  For each row:
+        for (let j = 0; j < columns; j++) {                         //  For each column:
+            currentTable[i][j] = 0;                                 //  Set 0 to current table space.
+            nextTable[i][j] = 0;                                    //  Set 0 to next table space.
         }
     }
 }
 
-function createLife() {                                         //  Creates the life of the game with the initial configuration provided by the user.
-    let life = document.querySelector('.lifeGrid');             //  Creates a variable for the game grid.
-    let tbl = document.createElement('table');                  //  Creates a variable to link the population table to the game grid.
-    tbl.setAttribute('id', 'lifegrid');                         //  Sets the id attribute of the population table.
-
-    for (let i = 0; i < rows; i++) {                            //  For each row:
-        let tr = document.createElement('tr');                  //  Creates a variable for each row of the table.
-        for (let j = 0; j < cols; j++) {                        //  For each column:
-            let box = document.createElement('td');             //  Creates a variable for each space of the table.
-            box.setAttribute('id', i + '_' + j);                //  Sets the id attribute with the row and column index.
-            box.setAttribute('class', 'dead');                  //  Sets the class attribute of the space to dead (0).
-            box.addEventListener('click', boxClick);            //  Add a listener to toggle the space to dead (0) or alive (1).
-            tr.appendChild(box);                                //  Add the space to the table row array.
+function createLife() {                                             //  Creates the life of the game with the initial configuration provided by the user.
+    let life = document.querySelector('.lifeGrid');                 //  Creates a variable for the game grid.
+    let table = document.createElement('table');                    //  Creates a variable to link the population table to the game grid.
+    
+    for (let i = 0; i < rows; i++) {                                //  For each row:
+        let tr = document.createElement('tr');                      //  Creates a variable for each row of the table.
+        for (let j = 0; j < columns; j++) {                         //  For each column:
+            let space = document.createElement('td');               //  Creates a variable for each space of the table on the website.
+            space.setAttribute('id', i + '_' + j);                  //  Sets the id attribute with the row and column index.
+            space.setAttribute('class', 'unpopulated');             //  Sets the class attribute of the space to unpopulated.
+            space.addEventListener('click', spaceClick);            //  Add a listener to toggle the space to unpopulated or populated.
+            tr.appendChild(space);                                  //  Add the space to the table row array.
         }
-        tbl.appendChild(tr);                                    //  Add the table row array to the table. 
+        table.appendChild(tr);                                      //  Add the table row array to the table. 
     }
-    life.appendChild(tbl);                                      //  Add the table to the game grid.
+    life.appendChild(table);                                        //  Add the table to the game grid.
 }
 
-function boxClick() {                                           //  User Story 1: Toggle each space to dead (0) or alive (1).
-    let loc = this.id.split("_");                               //  Creates a location variable.
-    let row = Number(loc[0]);                                   //  Creates a row variable with the row provided by the grid space.
-    let col = Number(loc[1]);                                   //  Creates a column variable with the column provided by grid space.
-                                                        
-    if (this.className === 'alive') {                           //  If the space is alive:
-        this.setAttribute('class', 'dead');                     //  Sets class to dead.
-        currBox[row][col] = 0;                                  //  Set the current space to dead (0).
-    } else {                                                    //  Otherwise: 
-        this.setAttribute('class', 'alive');                    //  Sets class to alive.
-        currBox[row][col] = 1;                                  //  Set the current space to alive (1).
+function spaceClick() {                                             //  User Story 1: Toggle each space to unpopulated (0) or populated (1).
+    let spaceLocation = this.id.split("_");                         //  Creates a location variable.
+    let row = Number(spaceLocation[0]);                             //  Creates a row variable with the row provided by the grid space.
+    let column = Number(spaceLocation[1]);                          //  Creates a column variable with the column provided by grid space.
+                                        
+    if (!gameStatus) {                                              //  If the game is not running:
+        if (this.className === 'populated') {                       //  If the space is populated:
+            this.setAttribute('class', 'unpopulated');              //  Sets class to unpopulated.
+            currentTable[row][column] = 0;                          //  Set the current space to (0).
+        } else {                                                    //  Otherwise: 
+            this.setAttribute('class', 'populated');                //  Sets class to populated.
+            currentTable[row][column] = 1;                          //  Set the current space to (1).
+        }
     }
 }
 
-function createNextBox() {                                      //  Creates the next generation box.
-    for (row in currBox) {                                      //  For each row in the current box:
-        for (col in currBox[row]) {                             //  For each column in the current row of the box:
-            let boxes = getBoxesCount(row, col);                //  Creates a varible for the number of current neighbors alive (1).
+function createNextTable() {                                        //  Creates the next generation table.
+    for (row in currentTable) {                                     //  For each row in the current table:
+        for (column in currentTable[row]) {                         //  For each column in the current row of the table:
+            let neighbors = getNeighborsCount(row, column);         //  Creates a varible for the number of current neighbors populated (1).
                                                        
-            if (currBox[row][col] === 1) {                      //  If cell is alive (1):
-                if (boxes < 2) {                                //  If neighbors are less than 2:
-                    nextBox[row][col] = 0;                      //  The cell dies in the next generation by underpopulation. 
-                } else if (boxes === 2 || boxes === 3) {        //  Else, if neighbors are equal to 2 or 3:
-                    nextBox[row][col] = 1;                      //  The cell lives in the next generation. 
-                } else if (boxes > 3) {                         //  Else, if neighbors are more than 3: 
-                    nextBox[row][col] = 0;                      //  The cell dies in the next generation by overpopulation.
+            if (currentTable[row][column] === 1) {                  //  If cell is populated (1):
+                if (neighbors < 2) {                                //  If neighbors are less than 2:
+                    nextTable[row][column] = 0;                     //  The cell dies in the next generation by underpopulation. 
+                } else if (neighbors === 2 || neighbors === 3) {    //  Else, if neighbors are equal to 2 or 3:
+                    nextTable[row][column] = 1;                     //  The cell lives in the next generation. 
+                } else if (neighbors > 3) {                         //  Else, if neighbors are more than 3: 
+                    nextTable[row][column] = 0;                     //  The cell dies in the next generation by overpopulation.
                 }
-            } else if (currBox[row][col] === 0) {               //  Else, if it is dead (0):
-                if (boxes === 3) {                              //  If neighbors are exactly 3:
-                    nextBox[row][col] = 1;                      //  The cell becomes a live cell by reproduction.
+            } else if (currentTable[row][column] === 0) {           //  Else, if it is unpopulated (0):
+                if (neighbors === 3) {                              //  If neighbors are exactly 3:
+                    nextTable[row][column] = 1;                     //  The cell becomes a live cell by reproduction.
                 }
             }
         }
     }
 }
 
-function getBoxesCount(row, col) {                              //  Counts the current alive (1) neighbors.
-    let count = 0;                                              //  Creates a variable to count alive (1) neighbors.
-    let nrow = Number(row);                                     //  Creates a variable with the current row number.
-    let ncol = Number(col);                                     //  Creates a variable with the current column number.
+function getNeighborsCount(row, column) {                           //  Counts the current populated (1) neighbors.
+    let count = 0;                                                  //  Creates a variable to count populated (1) neighbors.
+    let numberRow = Number(row);                                    //  Creates a variable with the current row number.
+    let numberColumn = Number(column);                              //  Creates a variable with the current column number.
 
-    if (nrow - 1 >= 0) {                                        //  Check if it is not at the top row of the grid:
-        if (currBox[nrow - 1][ncol] === 1)                      //  Check top space and if it is alive (1):
-            count++;                                            //  Increase the counter variable.
+    if (numberRow - 1 >= 0 && numberColumn - 1 >= 0) {              //  Check if it is not at the top and at the left column of the grid:
+        if (currentTable[numberRow - 1][numberColumn - 1] === 1)    //  Check upper left space and if it is populated (1):
+            count++;                                                //  Increase the counter variable.
     }
-    if (nrow - 1 >= 0 && ncol - 1 >= 0) {                       //  Check if it is not at the top and at the left column of the grid:
-        if (currBox[nrow - 1][ncol - 1] === 1)                  //  Check upper left space and if it is alive (1):
-            count++;                                            //  Increase the counter variable.
+    if (numberRow - 1 >= 0) {                                       //  Check if it is not at the top row of the grid:
+        if (currentTable[numberRow - 1][numberColumn] === 1)        //  Check top space and if it is populated (1):
+            count++;                                                //  Increase the counter variable.
     }
-    if (nrow - 1 >= 0 && ncol + 1 < cols) {                     //  Check if it is not at the top and at the right column of the grid:
-        if (currBox[nrow - 1][ncol + 1] === 1)                  //  Check upper right space and if it is alive (1):
-            count++;                                            //  Increase the counter variable.
+    if (numberRow - 1 >= 0 && numberColumn + 1 < columns) {         //  Check if it is not at the top and at the right column of the grid:
+        if (currentTable[numberRow - 1][numberColumn + 1] === 1)    //  Check upper right space and if it is populated (1):
+            count++;                                                //  Increase the counter variable.
     }
-    if (ncol - 1 >= 0) {                                        //  Check if it is not at the left column of the grid:
-        if (currBox[nrow][ncol - 1] === 1)                      //  Check left space and if it is alive (1):
-            count++;                                            //  Increase the counter variable.
+    if (numberColumn - 1 >= 0) {                                    //  Check if it is not at the left column of the grid:
+        if (currentTable[numberRow][numberColumn - 1] === 1)        //  Check left space and if it is populated (1):
+            count++;                                                //  Increase the counter variable.
     }
-    if (ncol + 1 < cols) {                                      //  Check if it is not at the right column of the grid:
-        if (currBox[nrow][ncol + 1] === 1)                      //  Check right space and if it is alive (1):
-            count++;                                            //  Increase the counter variable.
+    if (numberColumn + 1 < columns) {                               //  Check if it is not at the right column of the grid:
+        if (currentTable[numberRow][numberColumn + 1] === 1)        //  Check right space and if it is populated (1):
+            count++;                                                //  Increase the counter variable.
     }
-    if (nrow + 1 < rows && ncol - 1 >= 0) {                     //  Check if it is not at the bottom row and left column of the grid:
-        if (currBox[nrow + 1][ncol - 1] === 1)                  //  Check bottom left space and if it is alive (1):
-            count++;                                            //  Increase the counter variable.
+    if (numberRow + 1 < rows && numberColumn - 1 >= 0) {            //  Check if it is not at the bottom row and left column of the grid:
+        if (currentTable[numberRow + 1][numberColumn - 1] === 1)    //  Check bottom left space and if it is populated (1):
+            count++;                                                //  Increase the counter variable.
     }
-    if (nrow + 1 < rows && ncol + 1 < cols) {                   //  Check if it is not at the bottom row and right column of the grid:
-        if (currBox[nrow + 1][ncol + 1] === 1)                  //  Check botto right space and if is is alive (1):
-            count++;                                            //  Increase the counter variable.
+    if (numberRow + 1 < rows) {                                     //  Check if it is not at the bottom row of the grid:
+        if (currentTable[numberRow + 1][numberColumn] === 1)        //  Check bottom space and if it is populated (1):
+            count++;                                                //  Increase the counter variable.
     }
-    if (nrow + 1 < rows) {                                      //  Check if it is not at the bottom row of the grid:
-        if (currBox[nrow + 1][ncol] === 1)                      //  Check bottom space and if it is alive (1):
-            count++;                                            //  Increase the counter variable.
+    if (numberRow + 1 < rows && numberColumn + 1 < columns) {       //  Check if it is not at the bottom row and right column of the grid:
+        if (currentTable[numberRow + 1][numberColumn + 1] === 1)    //  Check botto right space and if is is populated (1):
+            count++;                                                //  Increase the counter variable.
     }
-    return count;                                               //  Returns the counter variable.
+    return count;                                                   //  Returns the counter variable.
 }
 
-function updateCurrBox() {                                      //  Updates the current table with the population of the next generation.
-    for (row in currBox) {                                      //  For each row in the current table:
-        for (col in currBox[row]) {                             //  For each column in the current table:
-            currBox[row][col] = nextBox[row][col];              //  Update the current row and column.
-            nextBox[row][col] = 0;                              //  Clear the next table row and column.
+function updateCurrentTable() {                                     //  Updates the current table with the population of the next generation.
+    for (row in currentTable) {                                     //  For each row in the current table:
+        for (column in currentTable[row]) {                         //  For each column in the current table:
+            currentTable[row][column] = nextTable[row][column];     //  Update the current row and column.
+            nextTable[row][column] = 0;                             //  Clear the next table row and column.
         }
     }
 }
 
-function updatelife() {                                         //  Updates the game grid with the next status of each space.
-    let box = '';                                               //  Creates a local variable to select the space to update.
+function updateLife() {                                             //  Updates the game grid with the next status of each space.
+    let space = '';                                                 //  Creates a local variable to select the space to update.
     
-    for (row in currBox) {                                      //  For each row in current table:
-        for (col in currBox[row]) {                             //  For each column in current table:
-            box = document.getElementById(row + '_' + col);     //  The local variable will be the concatenated string of the row + _ + the column index.
-            if (currBox[row][col] === 0) {                      //  If the current space is dead (0):
-                box.setAttribute('class', 'dead');              //  Set the dead class attribute to the space.
-            } else {                                            //  Otherwise:
-                box.setAttribute('class', 'alive');             //  Set the alive class attribute to the space.
+    for (row in currentTable) {                                     //  For each row in current table:
+        for (column in currentTable[row]) {                         //  For each column in current table:
+            space = document.getElementById(row + '_' + column);    //  The local variable will be the concatenated string of the row + _ + the column index.
+            if (currentTable[row][column] === 0) {                  //  If the current space is unpopulated (0):
+                space.setAttribute('class', 'unpopulated');         //  Set the unpopulated class attribute to the space.
+            } else {                                                //  Otherwise:
+                space.setAttribute('class', 'populated');           //  Set the populated class attribute to the space.
             }
         }
     }
 }
 
-function cycle() {                                              //  Run a Game of Life cycle.
-    createNextBox();                                            //  Creates the next generation box.
-    updateCurrBox();                                            //  Updates the current table with the population of the next generation.
-    updatelife();                                               //  Updates the game grid with the next status of each space.
+function cycle() {                                                  //  Run a Game of Life cycle.
+    createNextTable();                                              //  Creates the next generation box.
+    updateCurrentTable();                                           //  Updates the current table with the population of the next generation.
+    updateLife();                                                   //  Updates the game grid with the next status of each space.
     
-    if (initiate) {                                             //  If the game is running: 
-        timer = setTimeout(cycle, lifespeed);                   //  The timer variable will execute the game cycle after the time between generations has passed.
+    if (gameStatus) {                                               //  If the game is running: 
+        timer = setTimeout(cycle, lifespeed);                       //  The timer variable will execute the game cycle after the time between generations has passed.
     }
 }
 
-function startStopGame() {                                      //  User Story 2: Toogle the game status. Start/Stop.
-    let startlife = document.querySelector('#btnStartStop');    //  Creates a variable that set the value of the Start/Stop button on the website.
+function startStopGame() {                                          //  User Story 2: Toogle the game status. Start/Stop.
+    let startlife = document.querySelector('#btnStartStop');        //  Creates a variable that set the value of the Start/Stop button on the website.
     
-    if (initiate) {                                             //  If the game has begun:
-        initiate = false;                                       //  Status variable will be set to false.
-        startlife.value = 'Start';                              //  Start/Stop button on the webiste will go to Start option.
-        clearTimeout(timer);                                    //  Clear the timeout previosly established.
-    } else {                                                    //  Otherwise:
-        initiate = true;                                        //  Status variable will be set to true.
-        startlife.value = 'Stop';                               //  Start/Stop button on the website will go to Stop option.
-        cycle();                                                //  Run a Game of Life cycle.
+    if (gameStatus) {                                               //  If the game has begun:
+        gameStatus = false;                                         //  Status variable will be set to false.
+        startlife.value = 'Start';                                  //  Start/Stop button on the webiste will go to Start option.
+        clearTimeout(timer);                                        //  Clear the timeout previosly established.
+    } else {                                                        //  Otherwise:
+        gameStatus = true;                                          //  Status variable will be set to true.
+        startlife.value = 'Stop';                                   //  Start/Stop button on the website will go to Stop option.
+        cycle();                                                    //  Run a Game of Life cycle.
     }
 }
 
-function clearLife() {                                          //  User Story 6: Set the game back to the initial state.
-    location.reload();                                          //  Reloads the website to the initial state.
+function restartInitState() {                                       //  User Story 6: Set the game back to the initial state.
+    location.reload();                                              //  Reloads the website to the initial state.
 }
 
-window.onload = () => {                                         //  When the windows has loaded:
-    createLife();                                               //  Creates the life of the game with the initial configuration provided by the user.
-    createBoxArrays();                                          //  Creates two-dimensional arrays for the current and the next box.
-    initBoxArrays();                                            //  Initializes the current and next boxes as unpopulated or 0.
+window.onload = () => {                                             //  When the windows has loaded:
+    createLife();                                                   //  Creates the life of the game with the initial configuration provided by the user.
+    createTableArrays();                                            //  Creates two-dimensional arrays for the current and the next box.
+    initTableArrays();                                              //  Initializes the current and next box as unpopulated or 0.
 }

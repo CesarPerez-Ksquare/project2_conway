@@ -23,11 +23,11 @@ td {
 }
 
 /* Set the style of unpopulated cells */
-td.dead {
+td.unpopulated {
     background-color: transparent;
 }
 
 /* Set the style of populated cell */
-td.alive {
+td.populated {
     background-color: whitesmoke;
 }

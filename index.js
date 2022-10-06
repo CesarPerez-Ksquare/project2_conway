@@ -169,7 +169,7 @@ function cycle() {
 }
 function startStopGame() {
     let startlife = document.querySelector('#btnstartstop');
-
+//created a conditional that will check if the game has begun and will pause it or otherwise resume it.
     if (initiate) {
         initiate = false;
         startlife.value = 'Start';

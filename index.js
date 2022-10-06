@@ -170,10 +170,15 @@ function cycle() {
 function startStopGame() {
     let startlife = document.querySelector('#btnstartstop');
 
-    initiate = true;
-    startlife.value = 'Start/Stop';
-    cycle();
-
+    if (initiate) {
+        initiate = false;
+        startlife.value = 'Start';
+        clearTimeout(timer);
+    } else {
+        initiate = true;
+        startlife.value = 'Stop';
+        cycle();
+    }
 }
 
 window.onload = () => {

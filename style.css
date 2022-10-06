@@ -1,0 +1,27 @@
+#life {
+    margin: auto;
+    width: 50%;
+    padding: 10px;
+}
+
+.buttons {
+    text-align: center;
+}
+
+table {
+    background-color: black;
+}
+
+td {
+    border: 1px solid gray;
+    width: 10px;
+    height: 10px;
+}
+
+td.dead {
+    background-color: transparent;
+}
+
+td.alive {
+    background-color: whitesmoke;
+}
